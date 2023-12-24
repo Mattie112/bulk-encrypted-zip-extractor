@@ -26,7 +26,9 @@ func main() {
 	BinPath = argsWithoutProg[1]
 	passwordPath := argsWithoutProg[2]
 	delStr := argsWithoutProg[3]
+
 	if delStr == "true" {
+		fmt.Println("Deletion has been activated!")
 		del = true
 	}
 	checkBinary()
@@ -35,7 +37,7 @@ func main() {
 	for _, file := range files {
 		for _, ext := range getSupportedExtensions() {
 			if strings.Contains(file.Name(), ext) {
-				fmt.Println(file.Name(), file.Type().String())
+				//fmt.Println(file.Name(), file.Type().String())
 				extractFile(path + "/" + file.Name())
 			}
 		}
@@ -66,13 +68,16 @@ func extractFile(filePath string) {
 	fmt.Println("Starting the extraction of: " + filePath)
 	ctx, cancel := context.WithTimeout(context.Background(), 300*time.Second)
 	defer cancel()
+	extractOk := false
 
 	for _, password := range passwordList {
-		fmt.Println(fmt.Sprintf("Trying %s with '%s'", filePath, password))
-		args := []string{"e", fmt.Sprintf("-p%s", password), fmt.Sprintf("-o%s", path), "-y", filePath}
+		// fmt.Println(fmt.Sprintf("Trying %s with '%s'", filePath, password))
+		args := []string{"x", fmt.Sprintf("-p%s", password), fmt.Sprintf("-o%s", path), "-y", filePath}
 		cmd := exec.CommandContext(ctx, BinPath, args...)
 		err := cmd.Run()
 		if err == nil {
+			fmt.Println(fmt.Sprintf("Extract complete of %s with password `%s`", filePath, password))
+			extractOk = true
 			if del {
 				fmt.Println("Extract OK, removing file")
 				err := os.Remove(filePath)
@@ -82,14 +87,18 @@ func extractFile(filePath string) {
 			}
 			break
 		}
-		if exiterr, ok := err.(*exec.ExitError); ok {
-			log.Printf("Exit Status: %d", exiterr.ExitCode())
+		if _, ok := err.(*exec.ExitError); ok {
+			//log.Printf("Exit Status: %d", exiterr.ExitCode())
 		} else {
 			log.Fatalf("cmd.Wait: %v", err)
 		}
 	}
 
-	fmt.Println("Extract complete")
+	if extractOk {
+		fmt.Println(fmt.Sprintf("Extract succeeded of file %s", filePath))
+	} else {
+		fmt.Println(fmt.Sprintf("Extract failed of file %s", filePath))
+	}
 }
 
 func checkBinary() {

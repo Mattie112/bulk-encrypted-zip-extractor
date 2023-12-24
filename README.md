@@ -4,7 +4,7 @@ A small script that uses 7Z binary to extract multiple zip/rar/7z files getting 
 
 # Requirements
 
-- `7zz` from https://www.7-zip.org/download.html
+- `7zz` binary from https://www.7-zip.org/download.html
 
 # Usage:
 
